@@ -1,2 +1,2 @@
 # MIS581-1
-Capstone 
+Capstone Project - Module 7 Assignment
