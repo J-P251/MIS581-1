@@ -1,0 +1,202 @@
+### SAS Coding for Capstone Project MIS581
+
+### Importing Dataset and assigning variable names
+
+Data FAF;
+	infile "/folders/myfolders/sasuser.v94/CombinedData1.csv" firstobs=2 delimiter=",";
+	input Qtr_Num Qtr_Date $ FAF_Qtr_Rev  GDP  Tbill_3M  Cons_Conf  Indust_Prod House_Starts  Pers_Consump  Cons_Credit  REIT_Mortg  Wil_REIT  Veh_Sales  Disp_Pers_Inc ;
+Run;
+
+###Explore data using Summary Statistics
+### Code for obtaining Summary Statistics
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc means data=WORK.FAF chartype mean std min max n vardef=df;
+	var FAF_Qtr_Rev GDP Tbill_3M Cons_Conf Indust_Prod House_Starts Pers_Consump 
+		Cons_Credit REIT_Mortg Wil_REIT Veh_Sales Disp_Pers_Inc;
+run;
+
+###Before determining what analytical tools can be used, we must first know if the
+###variables exhibit a normal distribution.
+
+### Code for Distribution Analysis
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc univariate data=WORK.FAF;
+	ods select Histogram GoodnessOfFit;
+	var FAF_Qtr_Rev GDP Tbill_3M Cons_Conf Indust_Prod House_Starts Pers_Consump 
+		Cons_Credit REIT_Mortg Wil_REIT Veh_Sales Disp_Pers_Inc;
+
+	/* Checking for Normality */
+	histogram FAF_Qtr_Rev GDP Tbill_3M Cons_Conf Indust_Prod House_Starts 
+		Pers_Consump Cons_Credit REIT_Mortg Wil_REIT Veh_Sales Disp_Pers_Inc / 
+		normal(mu=est sigma=est);
+run;
+
+
+###Since results from the Distribution analysis determined that several variables did not have normal distribution,
+###a Transform Data procedure needs to be applied.
+
+### Code to Transform variables Tbill_3M, Housing Start and REIT_Mortg data using Natural Log.
+
+data work.transform;
+	set WORK.FAF;
+	log_Tbill_3M=log(Tbill_3M);
+	log_House_Starts=log(House_Starts);
+	log_REIT_Mortg=log(REIT_Mortg);
+run;
+
+#### Code to perform distribution analysis on log_Tbill_3M, log_House_Starts and log_REIT_Mortg
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc univariate data=WORK.TRANSFORM;
+	ods select Histogram GoodnessOfFit;
+	var log_Tbill_3M log_House_Starts log_REIT_Mortg;
+
+	/* Checking for Normality */
+	histogram log_Tbill_3M log_House_Starts log_REIT_Mortg / normal(mu=est 
+		sigma=est);
+run;
+
+###Since transformation using Nat Log did not normalize distribution, 
+### Transformed Tbill_3M, Housing Start and REIT_Mortg data using Inverse function.
+
+### Code to Transform variables Tbill_3M, Housing Start and REIT_Mortg data using Inverse functionality.
+
+data work.transform;
+	set WORK.FAF;
+	inv_Tbill_3M=1 / Tbill_3M;
+	inv_House_Starts=1 / House_Starts;
+	inv_REIT_Mortg=1 / REIT_Mortg;
+run;
+
+
+#### Code to perform distribution analysis on inv_Tbill_3M, inv_House_Starts and inv_REIT_Mortg
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc univariate data=WORK.TRANSFORM;
+	ods select Histogram GoodnessOfFit;
+	var inv_Tbill_3M inv_House_Starts inv_REIT_Mortg;
+
+	/* Checking for Normality */
+	histogram inv_Tbill_3M inv_House_Starts inv_REIT_Mortg / normal(mu=est 
+		sigma=est);
+run;
+
+
+###Since transformation using Inverse function did not normalize distribution
+### Transformed Tbill_3M, Housing Start and REIT_Mortg data using Inverse Square function.
+
+### Code to Transform variables Tbill_3M, Housing Start and REIT_Mortg data using Inverse Square functionality.
+
+data work.transform;
+	set WORK.FAF;
+	inv2_Tbill_3M=1 / Tbill_3M**2;
+	inv2_House_Starts=1 / House_Starts**2;
+	inv2_REIT_Mortg=1 / REIT_Mortg**2;
+run;
+
+
+#### Code to perform distribution analysis on inv2_Tbill_3M, inv2_House_Starts and inv2_REIT_Mortg
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc univariate data=WORK.TRANSFORM;
+	ods select Histogram GoodnessOfFit;
+	var inv2_Tbill_3M inv2_House_Starts inv2_REIT_Mortg;
+
+	/* Checking for Normality */
+	histogram inv2_Tbill_3M inv2_House_Starts inv2_REIT_Mortg / normal(mu=est 
+		sigma=est);
+run;
+
+###Since transformation using Inverse Square function did not normalize distribution
+### Transformed Tbill_3M, Housing Start and REIT_Mortg data using Square Root function.
+
+### Code to Transform variables Tbill_3M, Housing Start and REIT_Mortg data using Square Root functionality.
+
+data work.transform;
+	set WORK.FAF;
+	sqrt_Tbill_3M=sqrt(Tbill_3M);
+	sqrt_House_Starts=sqrt(House_Starts);
+	sqrt_REIT_Mortg=sqrt(REIT_Mortg);
+run;
+
+#### Code to perform distribution analysis on sqrt_Tbill_3M, sqrt_House_Starts and sqrt_REIT_Mortg
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc univariate data=WORK.TRANSFORM;
+	ods select Histogram GoodnessOfFit;
+	var sqrt_Tbill_3M sqrt_House_Starts sqrt_REIT_Mortg;
+
+	/* Checking for Normality */
+	histogram sqrt_Tbill_3M sqrt_House_Starts sqrt_REIT_Mortg / normal(mu=est 
+		sigma=est);
+run;
+
+###Transformation using Square Root function did not normalize distribution
+### Repeated the above tests for the Veh_Sales and Disp_Pers_Inc variables
+### Veh_Sales data remained not normalized.  Disp_Pers_Inc was normalized with Nat Log Transformation.
+
+###Due to non-parametric data, Spearman's Correlation Coefficient analysis was utilized.
+
+
+### Code to perform Spearman's Correlation Coefficient analysis
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc corr data=WORK.FAF pearson spearman nosimple rank plots=none;
+	var FAF_Qtr_Rev GDP Tbill_3M Cons_Conf Indust_Prod House_Starts Pers_Consump 
+		Cons_Credit REIT_Mortg Wil_REIT Veh_Sales Disp_Pers_Inc;
+run;
+
+###Results from Spearman's Correlation Analysis identified Pers_Consump as the variable with
+###the highest association with the dependent variable FAF_Qtr_Rev.  Pers_Consump was also
+###moderately-to-strongly associated with each of the remaining independent variables. Due
+### to the multi-collinearity issue, only Pers_Consump would be used in the Regression analysis.
+
+### Code for Linear Regression Analysis 
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc reg data=WORK.FAF alpha=0.05 plots(only)=(diagnostics residuals fitplot 
+		observedbypredicted);
+	model FAF_Qtr_Rev=Pers_Consump /;
+	run;
+quit;
+
+
+###Due to success of Linear Regression analysis, proceeded to engage a Predictive Regression
+###analysis.  During this process, 20% of the data set was partitioned to be run as test data.
+
+###Code for Predictive Regression Analysis
+
+ods noproctitle;
+ods graphics / imagemap=on;
+
+proc glmselect data=WORK.FAF outdesign(addinputvars)=Work.Glmselect_Design;
+	partition fraction(test=0.2);
+	model FAF_Qtr_Rev=Pers_Consump / selection=none;
+run;
+
+proc reg data=Work.Glmselect_Design plots(only)=(diagnostics 
+		observedbypredicted);
+	ods select DiagnosticsPanel ObservedByPredicted;
+	model FAF_Qtr_Rev=&_GLSMOD /;
+	run;
+quit;
+
+###End of coding
